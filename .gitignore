@@ -1,9 +1,9 @@
 # 忽略資料集
-angle_45_roi_analysis_img/
+
 angle_45_dataset/
-angle_60_roi_analysis_img/
+
 angle_60_dataset/
-angle_90_roi_analysis_img/
+
 angle_90_dataset/
 
 # 忽略快取檔案
