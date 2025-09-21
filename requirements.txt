@@ -1,0 +1,6 @@
+pyrealsense2
+PyQt5
+opencv-python
+numpy
+matplotlib
+pandas

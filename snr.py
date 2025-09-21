@@ -18,7 +18,7 @@ except Exception as e:
     print("可能會導致中文顯示為亂碼")
 
 # 全域變數，用於切換分析角度 (可選: 45 或 60 或 90  )
-ANGLE_MODE = 90
+ANGLE_MODE = 45
 
 def main():
     
