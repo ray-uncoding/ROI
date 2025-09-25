@@ -20,13 +20,14 @@ except Exception as e:
 
 # 全域變數，用於切換分析角度 (可選: 45 或 60 或 90)
 ANGLE_MODE = 45
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 class ROISelector:
     def __init__(self, dataset_path):
         self.dataset_path = dataset_path
         self.groups = [f"Group_{i+1}" for i in range(8)]  # 更新為 8 個組別
         self.roi_data = {}  # 儲存每個組別的 ROI 座標
-        self.roi_file = f"angle_{ANGLE_MODE}_roi_coordinates.json"
+        self.roi_file = os.path.join(PROJECT_ROOT, f"angle_{ANGLE_MODE}_roi_coordinates.json")
         
         # 嘗試載入已存在的 ROI 資料
         self.load_roi_data()
@@ -61,9 +62,18 @@ class ROISelector:
             return None
             
         img_path = os.path.join(group_path, image_files[0])
-        img = cv2.imread(img_path)
-        if img is not None:
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        try:
+            # 使用 np.fromfile 和 cv2.imdecode 來處理包含非 ASCII 字元的路徑
+            n = np.fromfile(img_path, np.uint8)
+            img = cv2.imdecode(n, cv2.IMREAD_COLOR)
+            if img is not None:
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        except Exception as e:
+            print(f"使用 cv2.imdecode 讀取圖片失敗: {e}")
+            # Fallback to cv2.imread, which might fail
+            img = cv2.imread(img_path)
+            if img is not None:
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         return img
     
     def select_roi_for_group(self, group_name):
@@ -203,8 +213,8 @@ class ROISelector:
             print(f"錯誤：找不到組別 {group_name}")
             return None
             
-        # 建立輸出目錄
-        output_dir = os.path.join(f"roi_extracted_angle_{ANGLE_MODE}", group_name)
+        # 建立輸出目錄（放在專案目錄下）
+        output_dir = os.path.join(PROJECT_ROOT, f"roi_extracted_angle_{ANGLE_MODE}", group_name)
         os.makedirs(output_dir, exist_ok=True)
         
         roi_points = self.roi_data[group_name]
@@ -349,7 +359,7 @@ class ROISelector:
 
 if __name__ == "__main__":
     # 設定資料集路徑
-    dataset_path = f"angle_{ANGLE_MODE}_dataset"
+    dataset_path = os.path.join(PROJECT_ROOT, f"angle_{ANGLE_MODE}_dataset")
     
     # 建立 ROI 選擇器
     roi_selector = ROISelector(dataset_path)

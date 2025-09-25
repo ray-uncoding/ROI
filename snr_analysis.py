@@ -2,9 +2,11 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
+from pathlib import Path
 
 # 全域變數，用於切換分析角度 (可選: 45 或 60 或 90)
-ANGLE_MODE = 90
+ANGLE_MODE = 45
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 def main():
 
@@ -26,7 +28,7 @@ def main():
     # ===========================================
    
     # 1.1 載入測量數據
-    csv_file = f'snr_angle_{ANGLE_MODE}_results_summary.csv'
+    csv_file = os.path.join(PROJECT_ROOT, f'snr_angle_{ANGLE_MODE}_results_summary.csv')
     print(f"載入數據: {csv_file}")
     snr_data = pd.read_csv(csv_file)                               # 讀取 CSV 文件
     deg_theta = np.full(len(snr_data), ANGLE_MODE)                 # 仰角 (使用全域變數)
@@ -149,7 +151,7 @@ def main():
     plt.tight_layout()
     
     # 保存圖片
-    output_file = f'snr_angle_{ANGLE_MODE}_analysis.png'
+    output_file = os.path.join(PROJECT_ROOT, f'snr_angle_{ANGLE_MODE}_analysis.png')
     plt.savefig(output_file, dpi=300, bbox_inches='tight')
     print(f"圖表已保存為: {output_file}")
     

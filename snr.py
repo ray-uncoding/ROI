@@ -19,6 +19,8 @@ except Exception as e:
 
 # 全域變數，用於切換分析角度 (可選: 45 或 60 或 90  )
 ANGLE_MODE = 45
+# 專案根目錄
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 def main():
     
@@ -30,8 +32,8 @@ def main():
     # ==================================================
     # ====== Step 1 設定資料集路徑和 ROI 邊界參數 ======
     # ==================================================
-    dataset_path = f"angle_{ANGLE_MODE}_dataset"
-    roi_file = f"angle_{ANGLE_MODE}_roi_coordinates.json"
+    dataset_path = os.path.join(PROJECT_ROOT, f"angle_{ANGLE_MODE}_dataset")
+    roi_file = os.path.join(PROJECT_ROOT, f"angle_{ANGLE_MODE}_roi_coordinates.json")
     
     # 1.1 讀取 ROI 座標資料
     try:
@@ -44,10 +46,14 @@ def main():
     # 1.2 讀取一張影像以取得影像尺寸
     try:
         sample_img_path = glob.glob(os.path.join(dataset_path, "Group_1", "*.png"))[0]
-        sample_img = cv2.imread(sample_img_path, cv2.IMREAD_GRAYSCALE)
+        # 使用 np.fromfile 和 cv2.imdecode 來處理包含非 ASCII 字元的路徑
+        n = np.fromfile(sample_img_path, np.uint8)
+        sample_img = cv2.imdecode(n, cv2.IMREAD_GRAYSCALE)
+        if sample_img is None:
+            raise AttributeError("無法使用 imdecode 解碼影像")
         img_shape = sample_img.shape
-    except (IndexError, AttributeError):
-        print("錯誤：在 Group_1 中找不到任何影像或無法讀取，無法確定影像尺寸。")
+    except (IndexError, AttributeError, Exception) as e:
+        print(f"錯誤：在 Group_1 中找不到任何影像或無法讀取，無法確定影像尺寸。錯誤詳情: {e}")
         return
     
     # ==================================================
@@ -90,7 +96,14 @@ def main():
         # 3.0 堆疊影像並準備計算
         imgs = []
         for f in img_files:
-            I = cv2.imread(f, cv2.IMREAD_GRAYSCALE)  # 以灰階讀取影像
+            try:
+                # 使用 np.fromfile 和 cv2.imdecode 來處理包含非 ASCII 字元的路徑
+                n = np.fromfile(f, np.uint8)
+                I = cv2.imdecode(n, cv2.IMREAD_GRAYSCALE)
+            except Exception as e:
+                print(f"警告：使用 cv2.imdecode 讀取影像 {f} 失敗: {e}，嘗試備用方法。")
+                I = cv2.imread(f, cv2.IMREAD_GRAYSCALE)  # 以灰階讀取影像
+
             if I is None:
                 print(f"警告：無法讀取影像 {f}，將跳過。")
                 continue
@@ -199,11 +212,11 @@ def main():
                 fig1.delaxes(axes1[row, col])                                                   # 刪除子圖
 
         # 確保輸出目錄存在
-        output_dir = f"angle_{ANGLE_MODE}_analysis_img"
+        output_dir = os.path.join(PROJECT_ROOT, f"angle_{ANGLE_MODE}_analysis_img")
         os.makedirs(output_dir, exist_ok=True)
-        
+
         plt.tight_layout(rect=[0, 0, 1, 0.95])                                                  # 調整佈局以適應標題
-        plt.savefig(f"{output_dir}/fig1_average_image_with_mask.png")                           # 儲存圖片至指定資料夾
+        plt.savefig(os.path.join(output_dir, "fig1_average_image_with_mask.png"))              # 儲存圖片至指定資料夾
         plt.show()
 
         # 4.2 圖二 疊加標準差圖
@@ -226,7 +239,7 @@ def main():
                 fig2.delaxes(axes2[row, col])
 
         plt.tight_layout(rect=[0, 0, 1, 0.96])                                                  # 調整佈局以適應標題
-        plt.savefig(f"{output_dir}/fig2_standard_deviation_image_with_mask.png")                # 儲存圖片
+        plt.savefig(os.path.join(output_dir, "fig2_standard_deviation_image_with_mask.png"))
         plt.show()
 
         # 4.3 圖三 padding 過的疊加平均圖
@@ -249,7 +262,7 @@ def main():
                 fig3.delaxes(axes3[row, col])
         
         plt.tight_layout(rect=[0, 0, 1, 0.96])                                                  # 調整佈局以適應標題
-        plt.savefig(f"{output_dir}/fig3_average_image_with_padding.png")                        # 儲存圖片
+        plt.savefig(os.path.join(output_dir, "fig3_average_image_with_padding.png"))
         plt.show()
 
         # 4.4 圖四 疊加 Gaussian 平滑圖
@@ -272,7 +285,7 @@ def main():
                 fig4.delaxes(axes4[row, col])
         
         plt.tight_layout(rect=[0, 0, 1, 0.96])                                                  # 調整佈局以適應標題
-        plt.savefig(f"{output_dir}/fig4_gaussian_smoothed_image_with_mask.png")                 # 儲存圖片
+        plt.savefig(os.path.join(output_dir, "fig4_gaussian_smoothed_image_with_mask.png"))
         plt.show()
 
         # 4.5 圖五 疊加殘差圖
@@ -295,7 +308,7 @@ def main():
                 fig5.delaxes(axes5[row, col])
         
         plt.tight_layout(rect=[0, 0, 1, 0.96])                                                  # 調整佈局以適應標題
-        plt.savefig(f"{output_dir}/fig5_residual_image_with_mask.png")                          # 儲存圖片
+        plt.savefig(os.path.join(output_dir, "fig5_residual_image_with_mask.png"))
         plt.show()
 
     # ================================================
@@ -328,7 +341,7 @@ def main():
         "Signal Strength (S_j)": [S_j_list[name] for name in results.keys()],
         "Noise Strength (N_j)": [N_j_list[name] for name in results.keys()]
     })
-    csv_file = f"snr_angle_{ANGLE_MODE}_results_summary.csv"
+    csv_file = os.path.join(PROJECT_ROOT, f"snr_angle_{ANGLE_MODE}_results_summary.csv")
     df.to_csv(csv_file, index=False)
     print(f"\n已將結果存入 '{csv_file}'。")
     

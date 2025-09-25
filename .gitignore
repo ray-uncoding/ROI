@@ -6,6 +6,8 @@ angle_60_dataset/
 
 angle_90_dataset/
 
+Other_resourse/
+
 # 忽略快取檔案
 __pycache__/
 *.pyc

@@ -9,9 +9,12 @@ from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QImage, QPixmap
 import os
 import time
+from pathlib import Path
 
 # 全域變數，用於切換分析角度 (可選: 45 或 60 或 90)
 ANGLE_MODE = 60
+# 專案根目錄（相對於此檔案）
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 class RealSenseApp(QMainWindow):
     def __init__(self):
@@ -133,8 +136,9 @@ class RealSenseApp(QMainWindow):
         # 初始化變數
         self.is_capturing = False
         self.capture_count = 0
-        self.output_dir = f"angle_{ANGLE_MODE}_dataset"
-        
+        # 將資料集路徑設為專案目錄下的相對路徑
+        self.output_dir = os.path.join(PROJECT_ROOT, f"angle_{ANGLE_MODE}_dataset")
+
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
 
